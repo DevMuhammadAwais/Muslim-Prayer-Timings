@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Prayer Times</title>
+    <style>
+        #boxframeprayer {
+            width: 100%;
+            background: #204a44;
+            direction: ltr;
+            color: #fff;
+            padding: 5px;
+            font-family: Tahoma, Geneva, sans-serif;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        #boxframeprayer img {
+            border: 0;
+        }
+        #boxframeprayer table {
+            border: 0;
+            width: 100%;
+            border-collapse: collapse;
+        }
+        #boxframeprayer table tr td {
+            vertical-align: top;
+            padding: 3px;
+        }
+        #boxframeprayer table tr:first-child td img {
+            height: 70px;
+        }
+        #boxframeprayer table tr td .currentpray {
+            font-size: 15px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.63);
+        }
+        #boxframeprayer table tr td .thetimes {
+            font-size: 12px;
+            font-weight: normal;
+            line-height: 16px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.63);
+        }
+        #boxframeprayer table tr td .thetimes span:first-child {
+            border-bottom: 1px solid #fff;
+        }
+        #boxframeprayer table tr td .datetime {
+            font-size: 12px;
+            font-weight: normal;
+            line-height: 16px;
+            text-align: left;
+        }
+        #boxframeprayer table tr td .city {
+            font-size: 14px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.63);
+        }
+        #boxframeprayer table tr td .country {
+            font-size: 12px;
+            font-weight: normal;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.63);
+        }
+        #boxframeprayer table tr.headtdprayer td {
+            font-size: 12px;
+            text-align: center;
+            background: #7fafa8;
+        }
+        #boxframeprayer table.tbllistprayer tr td {
+            font-size: 11px;
+            text-align: center;
+            border-left: 1px solid #999999;
+            border-right: 1px solid #999999;
+            border-bottom: 1px solid #999999;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.63);
+        }
+        .highlight-next {
+            background: #000000;
+        }
+    </style>
+</head>
+<body>
+    <div id="boxframeprayer">
+        <table>
+            <tbody>
+                <tr>
+                    <td>
+                        <div class="currentpray">Next Prayer</div>
+                        <div class="city" id="cityName">Dubai</div>
+                        <div class="country" id="countryName">UAE</div>
+                    </td>
+                    <td>
+                        <div class="thetimes">
+                            <span>Remaining
+                                <span id="countdown" style="font-size: 12px; background: none; padding: 0; margin: 0;">06:59:55</span>
+                            </span>
+                            <br />
+                            <span id="azanText">Azan time <span id="nextAzanTime">3:58 am</span></span>
+                        </div>
+                        <div class="datetime playsound">
+                            الآن <span id="timenowinthecity">8:58:19 PM</span>
+                            <br /><span id="dayname">Thursday</span>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <table class="tbllistprayer">
+            <tbody>
+                <tr class="headtdprayer">
+                    <td colspan="3">Prayer</td>
+                    <td colspan="3">Time</td>
+                </tr>
+                <tr id="rowFajr">
+                    <td colspan="3">Fajr</td>
+                    <td colspan="3">3:58 am</td>
+                </tr>
+                <tr id="rowSunrise">
+                    <td colspan="3">Sunrise</td>
+                    <td colspan="3">5:28 am</td>
+                </tr>
+                <tr id="rowDhuhr">
+                    <td colspan="3">Dhuhr</td>
+                    <td colspan="3">12:24 pm</td>
+                </tr>
+                <tr id="rowAsr">
+                    <td colspan="3">Asr</td>
+                    <td colspan="3">3:47 pm</td>
+                </tr>
+                <tr id="rowMaghrib">
+                    <td colspan="3">Maghrib</td>
+                    <td colspan="3">7:11 pm</td>
+                </tr>
+                <tr id="rowIsha">
+                    <td colspan="3">Isha</td>
+                    <td colspan="3">8:41 pm</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <script>
+        window.onload = function () {
+            var soundHandler = null;
+            var typeTimeFormat = "en-GB";
+            var timeZone = "Asia/Dubai"; // Default time zone for Dubai
+            var myVar = setInterval(myTimer, 1000);
+            var played = false;
+
+            Number.prototype.pad = function (size) {
+                var s = String(this);
+                while (s.length < (size || 2)) {
+                    s = "0" + s;
+                }
+                return s;
+            };
+
+            function msToHMS(ms) {
+                var seconds = ms / 1000;
+                var hours = parseInt(seconds / 3600);
+                seconds = seconds % 3600;
+                var minutes = parseInt(seconds / 60);
+                seconds = parseInt(seconds % 60);
+                return hours.pad(2) + ":" + minutes.pad(2) + ":" + seconds.pad(2);
+            }
+
+            function getCityTime() {
+                return new Date(new Date().toLocaleString("en-US", { timeZone: timeZone }));
+            }
+
+            function getNextAzanTime() {
+                var currentTime = getCityTime();
+                var azanTimes = [
+                    { name: "Fajr", time: "03:58" },
+                    { name: "Sunrise", time: "05:28" },
+                    { name: "Dhuhr", time: "12:24" },
+                    { name: "Asr", time: "15:47" },
+                    { name: "Maghrib", time: "19:11" },
+                    { name: "Isha", time: "20:41" }
+                ];
+
+                for (var i = 0; i < azanTimes.length; i++) {
+                    var azanTime = azanTimes[i];
+                    var azanDate = new Date(currentTime);
+                    var [hours, minutes] = azanTime.time.split(':').map(Number);
+                    azanDate.setHours(hours);
+                    azanDate.setMinutes(minutes);
+                    azanDate.setSeconds(0);
+                    if (azanDate > currentTime) {
+                        return { azanTime: azanDate, azanName: azanTimes[i].name, rowId: "row" + azanTimes[i].name };
+                    }
+                }
+
+                // If no azan time found for the current day, return the first azan time of the next day
+                var nextDayAzan = azanTimes[0];
+                var nextDayAzanDate = new Date(currentTime);
+                nextDayAzanDate.setDate(currentTime.getDate() + 1);
+                var [hours, minutes] = nextDayAzan.time.split(':').map(Number);
+                nextDayAzanDate.setHours(hours);
+                nextDayAzanDate.setMinutes(minutes);
+                nextDayAzanDate.setSeconds(0);
+
+                return { azanTime: nextDayAzanDate, azanName: nextDayAzan.name, rowId: "row" + nextDayAzan.name };
+            }
+
+            function calculateRemainingTime(azanTime) {
+                var currentTime = getCityTime();
+                return azanTime - currentTime;
+            }
+
+            var nextAzan = getNextAzanTime();
+            var remainingTime = calculateRemainingTime(nextAzan.azanTime);
+
+            var clean_url = "example.com"; // Placeholder value for URL
+            var soundfile = "azan"; // Placeholder value for sound file
+            var base_url = "example.com"; // Placeholder value for base URL
+            var city_url = "dubai"; // Placeholder value for city URL
+            var duration_sound = 10; // Placeholder value for sound duration in seconds
+
+            var untilDate = getCityTime().getTime() + remainingTime;
+
+            function myTimer() {
+                var theCityTimeNow = getCityTime();
+                document.getElementById("timenowinthecity").innerHTML = theCityTimeNow
+                    .toLocaleTimeString(typeTimeFormat, { hour12: true })
+                    .toUpperCase();
+                document.getElementById("dayname").innerHTML = theCityTimeNow.toLocaleDateString('en-US', { weekday: 'long' });
+
+                var diff = untilDate - theCityTimeNow.getTime(); // in ms
+                if (diff <= 0) {
+                    if (!played) {
+                        soundHandler = new Audio("//" + clean_url + "/sounds/" + soundfile + ".mp3");
+                        praySound();
+                        played = true;
+                    }
+                } else {
+                    document.getElementById("countdown").innerHTML = msToHMS(diff);
+                }
+
+                var nextAzanTimeElement = document.getElementById("nextAzanTime");
+                nextAzanTimeElement.innerHTML = nextAzan.azanTime.toLocaleTimeString(typeTimeFormat, { hour: '2-digit', minute: '2-digit', hour12: true }).toLowerCase();
+                var currentPrayElement = document.querySelector(".currentpray");
+
+                if (nextAzan.azanName === "Sunrise") {
+                    document.getElementById("azanText").innerHTML = "Sunrise time <span id='nextAzanTime'>" + nextAzan.azanTime.toLocaleTimeString(typeTimeFormat, { hour: '2-digit', minute: '2-digit', hour12: true }).toLowerCase() + "</span>";
+                } else {
+                    document.getElementById("azanText").innerHTML = "Azan time <span id='nextAzanTime'>" + nextAzan.azanTime.toLocaleTimeString(typeTimeFormat, { hour: '2-digit', minute: '2-digit', hour12: true }).toLowerCase() + "</span>";
+                }
+
+                currentPrayElement.innerHTML = nextAzan.azanName;
+
+                highlightNextPrayer(theCityTimeNow);
+            }
+
+            function highlightNextPrayer(currentTime) {
+                var rows = ["rowFajr", "rowSunrise", "rowDhuhr", "rowAsr", "rowMaghrib", "rowIsha"];
+                var azanTimes = [
+                    { name: "Fajr", time: "03:58" },
+                    { name: "Sunrise", time: "05:28" },
+                    { name: "Dhuhr", time: "12:24" },
+                    { name: "Asr", time: "15:47" },
+                    { name: "Maghrib", time: "19:11" },
+                    { name: "Isha", time: "20:41" }
+                ];
+
+                var nextPrayerRow = null;
+
+                for (var i = 0; i < rows.length; i++) {
+                    var row = document.getElementById(rows[i]);
+                    var [hours, minutes] = azanTimes[i].time.split(':').map(Number);
+                    var azanTime = new Date(currentTime);
+                    azanTime.setHours(hours);
+                    azanTime.setMinutes(minutes);
+                    azanTime.setSeconds(0);
+
+                    row.classList.remove("highlight-next");
+
+                    if (azanTime > currentTime) {
+                        nextPrayerRow = row;
+                        break;
+                    }
+                }
+
+                if (nextPrayerRow) {
+                    nextPrayerRow.classList.add("highlight-next");
+                }
+            }
+
+            function praySound() {
+                document.getElementById("countdown").innerHTML = "00:00:00";
+                playAzan();
+                setTimeout(function () {
+                    location.reload();
+                }, duration_sound * 1000);
+            }
+
+            function playAzan() {
+                if (!soundHandler.paused) {
+                } else {
+                    soundHandler.play();
+                }
+            }
+
+            function pauseAzan() {
+                soundHandler.pause();
+            }
+
+            // Function to get location and adjust time zone
+            function adjustToUserLocation() {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(success, error);
+                } else {
+                    alert("Geolocation is not supported by this browser.");
+                }
+
+                function success(position) {
+                    var latitude = position.coords.latitude;
+                    var longitude = position.coords.longitude;
+                    fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`)
+                        .then(response => response.json())
+                        .then(data => {
+                            document.getElementById("cityName").innerText = data.city || data.locality || data.principalSubdivision;
+                            document.getElementById("countryName").innerText = data.countryName;
+
+                            fetch(`https://worldtimeapi.org/api/timezone`)
+                                .then(response => response.json())
+                                .then(timezones => {
+                                    var userTimeZone = timezones.find(tz => tz.includes(data.countryCode));
+                                    if (userTimeZone) {
+                                        timeZone = userTimeZone;
+                                    }
+                                    nextAzan = getNextAzanTime();
+                                    remainingTime = calculateRemainingTime(nextAzan.azanTime);
+                                    untilDate = getCityTime().getTime() + remainingTime;
+                                });
+                        });
+                }
+
+                function error() {
+                    alert("Unable to retrieve your location");
+                }
+            }
+
+            adjustToUserLocation(); // Call the function to get user location and adjust time zone
+        };
+
+        function showHideEle(elm) {
+            var x = document.getElementById(elm);
+            if (x.style.display === "block") {
+                x.style.display = "none";
+            } else {
+                x.style.display = "block";
+            }
+        }
+
+        function changeSettings() {
+            var method = document.getElementById("method").value;
+            var asr = document.getElementById("asr").value;
+            var time = document.getElementById("time").value;
+            window.location.href =
+                "//" + base_url + "/prayer-times-in-" + city_url + "-m" + method + "j" + asr + "t" + time + ".html";
+        }
+    </script>
+</body>
+</html>
